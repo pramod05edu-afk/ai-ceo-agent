@@ -1,0 +1,15 @@
+{
+  "total_documents": 134,
+  "sources": [
+    "google_news",
+    "finance_yahoo_finance_nvidia",
+    "tech_news_techcrunch",
+    "tech_news_ars_technica",
+    "tech_news_venturebeat_ai",
+    "nvidia_newsroom",
+    "finance_seeking_alpha_nvidia"
+  ],
+  "num_sources": 7,
+  "built_at": "2026-06-30T10:40:13.496010",
+  "duplicates_removed": 0
+}
