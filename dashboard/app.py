@@ -6,7 +6,22 @@ from datetime import datetime
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(ROOT)
+os.chdir(ROOT)  # all data paths (store/, data/) are relative to the project root
+
+try:  # local runs keep GROQ_API_KEY in .env; the hosted demo has no dotenv
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(ROOT, ".env"))
+except ImportError:
+    pass
+
+# The live pipeline (re-collect -> re-index -> re-run agent) needs the local
+# ChromaDB index and a Groq key. Without them (e.g. the hosted demo) the
+# dashboard runs in snapshot mode and shows the last saved analysis.
+PIPELINE_AVAILABLE = (os.path.isdir(os.path.join(ROOT, "store", "chroma"))
+                      and bool(os.getenv("GROQ_API_KEY")))
+REPO_URL = "https://github.com/pramod05edu-afk/ai-ceo-agent"
 
 st.set_page_config(
     page_title="AI CEO Strategic Intelligence",
@@ -98,25 +113,40 @@ with st.sidebar:
     st.write("**Embedding:** all-MiniLM-L6-v2")
     st.divider()
 
-    if st.button("Run New Analysis", use_container_width=True):
-        with st.spinner("Running AI analysis... (1-2 mins)"):
-            from agent.intelligence import run_full_analysis
-            results = run_full_analysis()
-            st.cache_data.clear()
-            st.success("Analysis complete!")
-            st.rerun()
+    if PIPELINE_AVAILABLE:
+        if st.button("Run New Analysis", width="stretch"):
+            with st.spinner("Running AI analysis... (1-2 mins)"):
+                from agent.intelligence import run_full_analysis
+                results = run_full_analysis()
+                st.cache_data.clear()
+                st.success("Analysis complete!")
+                st.rerun()
 
-    if st.button("Recollect Data", use_container_width=True):
-        with st.spinner("Collecting fresh data..."):
-            from collectors.run_all import run_all_collectors
-            run_all_collectors()
-            st.success("Data collected!")
+        if st.button("Recollect Data", width="stretch"):
+            with st.spinner("Collecting fresh data..."):
+                from collectors.run_all import run_all_collectors
+                run_all_collectors()
+                st.success("Data collected!")
+    else:
+        st.info("**Snapshot mode.** This hosted demo shows the agent's last saved "
+                "analysis. Data collection, indexing and the agent run locally "
+                f"(see the [GitHub repo]({REPO_URL})).")
 
     st.divider()
     generated = results.get("generated_at", "")
     if generated:
         dt = datetime.fromisoformat(generated)
         st.caption(f"Last updated: {dt.strftime('%d %b %Y, %H:%M')}")
+    st.markdown(f"[Source code on GitHub]({REPO_URL})")
+
+if not PIPELINE_AVAILABLE:
+    generated = results.get("generated_at", "")
+    when = datetime.fromisoformat(generated).strftime("%d %B %Y") if generated else "an earlier run"
+    n_docs = (summary or {}).get("total_documents")
+    n_src = (summary or {}).get("num_sources")
+    src = f" from {n_docs} documents across {n_src} sources" if n_docs and n_src else ""
+    st.caption(f"Snapshot of the agent's analysis generated on {when}{src}. "
+               "Figures and news reflect that date, not today.")
 
 # Agent Workflow Section
 st.header("Agent Workflow")
@@ -372,7 +402,7 @@ fig_gauge.update_layout(
     font={"color": "#FAFAFA"}
 )
 
-st.plotly_chart(fig_gauge, use_container_width=True)
+st.plotly_chart(fig_gauge, width="stretch")
 
 
 # Source distribution pie chart
@@ -409,7 +439,7 @@ try:
         font={"color": "#FAFAFA"},
         legend={"font": {"color": "#FAFAFA"}}
     )
-    st.plotly_chart(fig_pie, use_container_width=True)
+    st.plotly_chart(fig_pie, width="stretch")
 
 except Exception as e:
     st.caption(f"Chart unavailable: {e}")

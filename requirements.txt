@@ -1,0 +1,8 @@
+# Full local pipeline: collect -> index -> agent -> dashboard
+feedparser
+sentence-transformers
+chromadb
+groq
+python-dotenv
+streamlit
+plotly
