@@ -1,0 +1,3 @@
+# Hosted dashboard only (snapshot mode): reads store/ and data/ JSON files.
+streamlit>=1.50
+plotly>=5.20
