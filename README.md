@@ -5,6 +5,8 @@
 **Company Analyzed:** NVIDIA Corporation
 **Module:** Natural Language Processing
 
+**🚀 Live demo:** https://ai-ceo-agent.streamlit.app/ (snapshot of the agent's latest saved analysis; the collection, indexing and agent pipeline runs locally, see *How to Run*)
+
 ---
 
 ## Project Overview
